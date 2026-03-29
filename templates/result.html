@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPL Voting System - Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif; min-height: 100vh;
+      background: url('{{ url_for("static", filename="ipl_bg.jpg") }}') center/cover no-repeat fixed;
+      display: flex; align-items: center; justify-content: center; padding: 24px 0;
+    }
+    .overlay { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(10,10,40,0.85) 0%, rgba(60,10,80,0.80) 100%); z-index: 0; }
+    .card {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,0.09); backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 28px;
+      padding: 44px 40px 36px; max-width: 540px; width: 90%;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.4); animation: fadeUp 0.6s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+
+    h1 {
+      font-size: 1.7rem; font-weight: 800; text-align: center;
+      background: linear-gradient(90deg, #f9c74f, #f4845f, #c77dff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px;
+    }
+    .subtitle { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 24px; }
+
+    .flash { padding: 10px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; text-align: center; }
+    .flash.success { background: rgba(76,201,113,0.2); color: #4cc971; border: 1px solid rgba(76,201,113,0.3); }
+    .flash.error   { background: rgba(244,84,95,0.2);  color: #f4845f; border: 1px solid rgba(244,84,95,0.3); }
+
+    .total-box {
+      text-align: center; background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
+      padding: 12px; margin-bottom: 20px; color: rgba(255,255,255,0.6); font-size: 0.88rem;
+    }
+    .total-box strong { color: #f9c74f; font-size: 1.1rem; }
+
+    .result-row { margin-bottom: 16px; }
+    .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .cand-name { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .vote-info { font-size: 0.82rem; color: rgba(255,255,255,0.55); }
+    .bar-track { height: 12px; background: rgba(255,255,255,0.08); border-radius: 50px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 50px; width: 0%; background: linear-gradient(90deg, #f9c74f, #f4845f); transition: width 1.3s cubic-bezier(0.4,0,0.2,1); }
+    .winner-tag { background: linear-gradient(90deg,#f9c74f,#f4845f); color: #1a0a00; font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 50px; margin-left: 6px; }
+
+    .btn-group { display: flex; gap: 12px; margin-top: 24px; }
+    .btn { flex:1; padding:12px; border-radius:50px; border:none; font-family:'Poppins',sans-serif; font-size:0.88rem; font-weight:600; text-decoration:none; text-align:center; cursor:pointer; transition:transform 0.18s,filter 0.18s; }
+    .btn-primary { background: linear-gradient(90deg,#f9c74f,#f4845f); color:#1a0a00; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); }
+    .btn:hover { transform:translateY(-2px) scale(1.02); filter:brightness(1.1); }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="card">
+    <h1>📊 Live Results</h1>
+    <p class="subtitle">IPL 2025 — Fan Favourite Poll</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="total-box">Total votes: <strong>{{ total_votes }}</strong></div>
+
+    {% set max_votes = votes.values() | max %}
+    {% for team in teams %}
+    {% set count = votes[team] %}
+    {% set pct = ((count / total_votes * 100) | round | int) if total_votes > 0 else 0 %}
+    <div class="result-row">
+      <div class="row-header">
+        <span class="cand-name">
+          {{ team_info[team].emoji }} {{ team }}
+          <span style="font-size:0.75rem; color:rgba(255,255,255,0.4);">{{ team_info[team].name }}</span>
+          {% if total_votes > 0 and count == max_votes %}
+            <span class="winner-tag">🏆 Leading</span>
+          {% endif %}
+        </span>
+        <span class="vote-info">{{ count }} votes ({{ pct }}%)</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" data-pct="{{ pct }}"></div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="btn-group">
+      {% if not has_voted %}
+        <a href="/vote" class="btn btn-primary">🗳️ Vote Karo</a>
+      {% endif %}
+      <a href="/" class="btn btn-secondary">🏠 Home</a>
+      <a href="/logout" class="btn btn-secondary">🚪 Logout</a>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      document.querySelectorAll('.bar-fill').forEach(b => {
+        setTimeout(() => b.style.width = b.getAttribute('data-pct') + '%', 300);
+      });
+    });
+  </script>
+</body>
+</html>

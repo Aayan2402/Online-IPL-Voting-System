@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPL Voting System - Final Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif; min-height: 100vh;
+      background: url('{{ url_for("static", filename="ipl_bg.jpg") }}') center/cover no-repeat fixed;
+      display: flex; align-items: center; justify-content: center; padding: 24px 0;
+    }
+    .overlay { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(10,10,40,0.88) 0%, rgba(60,10,80,0.83) 100%); z-index: 0; }
+    .card {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,0.09); backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 28px;
+      padding: 48px 44px 40px; max-width: 560px; width: 90%;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.4); animation: fadeUp 0.6s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+
+    .public-tag {
+      display: flex; justify-content: center; margin-bottom: 16px;
+    }
+    .public-pill {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px; padding: 6px 18px; font-size: 0.78rem; color: rgba(255,255,255,0.55);
+    }
+
+    h1 {
+      font-size: 1.9rem; font-weight: 800; text-align: center;
+      background: linear-gradient(90deg, #f9c74f, #f4845f, #c77dff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px;
+    }
+    .subtitle { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 24px; }
+
+    .stats-row { display: flex; gap: 10px; margin-bottom: 22px; }
+    .stat-box { flex:1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 12px; text-align: center; }
+    .stat-num { font-size: 1.5rem; font-weight: 800; color: #f9c74f; }
+    .stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    .winner-box {
+      background: linear-gradient(135deg, rgba(249,199,79,0.15), rgba(244,132,95,0.15));
+      border: 1px solid rgba(249,199,79,0.4); border-radius: 18px;
+      padding: 16px 22px; text-align: center; margin-bottom: 22px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(249,199,79,0.2); }
+      50% { box-shadow: 0 0 0 10px rgba(249,199,79,0); }
+    }
+    .winner-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+    .winner-name { font-size: 1.3rem; font-weight: 800; color: #f9c74f; }
+
+    .result-row { margin-bottom: 16px; }
+    .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+    .cand-name { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .team-full-name { font-size: 0.72rem; color: rgba(255,255,255,0.35); }
+    .vote-info { font-size: 0.82rem; color: rgba(255,255,255,0.55); }
+    .bar-track { height: 13px; background: rgba(255,255,255,0.08); border-radius: 50px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 50px; width: 0%; background: linear-gradient(90deg, #f9c74f, #f4845f); transition: width 1.4s cubic-bezier(0.4,0,0.2,1); }
+    .winner-tag { background: linear-gradient(90deg,#f9c74f,#f4845f); color:#1a0a00; font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:50px; margin-left:4px; }
+
+    .btn-group { display: flex; gap: 12px; margin-top: 26px; }
+    .btn { flex:1; padding:13px; border-radius:50px; border:none; font-family:'Poppins',sans-serif; font-size:0.9rem; font-weight:600; text-decoration:none; text-align:center; cursor:pointer; transition:transform 0.18s,filter 0.18s; }
+    .btn-primary { background: linear-gradient(90deg,#f9c74f,#f4845f); color:#1a0a00; box-shadow: 0 4px 20px rgba(249,199,79,0.3); }
+    .btn-secondary { background: rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); }
+    .btn:hover { transform:translateY(-2px) scale(1.02); filter:brightness(1.1); }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="card">
+    <div class="public-tag">
+      <span class="public-pill">🔓 Public Results — Login zaruri nahi</span>
+    </div>
+
+    <h1>🏏 IPL 2025 Results</h1>
+    <p class="subtitle">Fan Favourite Poll — Live Count</p>
+
+    {% set max_votes = votes.values() | max %}
+    {% set winner_team = namespace(name='', count=0) %}
+    {% for team in teams %}
+      {% if votes[team] == max_votes and total_votes > 0 %}
+        {% set winner_team.name = team %}
+      {% endif %}
+    {% endfor %}
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num">{{ total_votes }}</div>
+        <div class="stat-label">Total Votes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">{{ total_users }}</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">{% if total_users > 0 %}{{ ((total_votes / total_users) * 100) | round | int }}%{% else %}0%{% endif %}</div>
+        <div class="stat-label">Turnout</div>
+      </div>
+    </div>
+
+    {% if total_votes > 0 and winner_team.name %}
+    <div class="winner-box">
+      <div class="winner-label">🏆 Currently Leading</div>
+      <div class="winner-name">{{ team_info[winner_team.name].emoji }} {{ winner_team.name }} — {{ team_info[winner_team.name].name }}</div>
+    </div>
+    {% endif %}
+
+    {% for team in teams %}
+    {% set count = votes[team] %}
+    {% set pct = ((count / total_votes * 100) | round | int) if total_votes > 0 else 0 %}
+    <div class="result-row">
+      <div class="row-header">
+        <span class="cand-name">
+          {{ team_info[team].emoji }} {{ team }}
+          <span class="team-full-name">{{ team_info[team].name }}</span>
+          {% if total_votes > 0 and count == max_votes %}
+            <span class="winner-tag">Leading</span>
+          {% endif %}
+        </span>
+        <span class="vote-info">{{ count }} votes &nbsp;({{ pct }}%)</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" data-pct="{{ pct }}"></div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <div class="btn-group">
+      <a href="/login" class="btn btn-primary">🔐 Login</a>
+      <a href="/register" class="btn btn-secondary">✍️ Register</a>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      document.querySelectorAll('.bar-fill').forEach(b => {
+        setTimeout(() => b.style.width = b.getAttribute('data-pct') + '%', 300);
+      });
+    });
+  </script>
+</body>
+</html>

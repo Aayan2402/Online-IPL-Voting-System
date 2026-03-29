@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPL Voting System - Vote</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif; min-height: 100vh;
+      background: url('{{ url_for("static", filename="ipl_bg.jpg") }}') center/cover no-repeat fixed;
+      display: flex; align-items: center; justify-content: center; padding: 24px 0;
+    }
+    .overlay { position: fixed; inset: 0; background: linear-gradient(135deg, rgba(10,10,40,0.85) 0%, rgba(60,10,80,0.80) 100%); z-index: 0; }
+    .card {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,0.09); backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 28px;
+      padding: 44px 40px 36px; max-width: 520px; width: 90%;
+      box-shadow: 0 8px 60px rgba(0,0,0,0.4); animation: fadeUp 0.6s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+    h1 {
+      font-size: 1.7rem; font-weight: 800; text-align: center;
+      background: linear-gradient(90deg, #f9c74f, #f4845f, #c77dff);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px;
+    }
+    .subtitle { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 24px; }
+
+    .flash { padding: 10px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px; text-align: center; }
+    .flash.error { background: rgba(244,84,95,0.2); color: #f4845f; border: 1px solid rgba(244,84,95,0.3); }
+
+    .teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+
+    .team-option { position: relative; }
+    .team-option input[type="radio"] { display: none; }
+    .team-card {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 14px 16px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    }
+    .team-card:hover { background: rgba(255,255,255,0.13); transform: translateY(-2px); }
+    .team-option input:checked + .team-card {
+      border-color: #f9c74f; background: rgba(249,199,79,0.12);
+      transform: translateY(-2px);
+    }
+    .team-emoji { font-size: 1.4rem; }
+    .team-short { font-size: 0.95rem; font-weight: 700; color: #fff; }
+    .team-full { font-size: 0.72rem; color: rgba(255,255,255,0.45); line-height: 1.2; }
+
+    .btn-submit {
+      width: 100%; padding: 14px; border-radius: 50px; border: none;
+      font-family: 'Poppins', sans-serif; font-size: 1rem; font-weight: 700;
+      background: linear-gradient(90deg, #f9c74f, #f4845f); color: #1a0a00; cursor: pointer;
+      box-shadow: 0 4px 24px rgba(249,199,79,0.35);
+      transition: transform 0.18s, filter 0.18s;
+    }
+    .btn-submit:hover { transform: translateY(-2px) scale(1.02); filter: brightness(1.08); }
+    .btn-submit:active { transform: scale(0.97); }
+    .back { display: block; text-align: center; margin-top: 14px; color: rgba(255,255,255,0.4); font-size: 0.82rem; text-decoration: none; }
+    .back:hover { color: #c77dff; }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="card">
+    <h1>🏏 IPL 2025 Vote</h1>
+    <p class="subtitle">Apni favourite team ko vote do!</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="teams-grid">
+        {% for team in teams %}
+        <label class="team-option">
+          <input type="radio" name="candidate" value="{{ team }}"/>
+          <div class="team-card">
+            <span class="team-emoji">{{ team_info[team].emoji }}</span>
+            <div class="team-text">
+              <div class="team-short">{{ team }}</div>
+              <div class="team-full">{{ team_info[team].name }}</div>
+            </div>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn-submit">🗳️ &nbsp; Vote Submit Karo</button>
+    </form>
+    <a href="/" class="back">← Back to Home</a>
+  </div>
+</body>
+</html>
